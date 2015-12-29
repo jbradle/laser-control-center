@@ -53,8 +53,4 @@ public class Configuration {
         }
         return laserDiodeCount;
     }
-
-    public void setLaserDiodeCount(Integer laserDiodeCount) {
-        this.laserDiodeCount = laserDiodeCount;
-    }
 }

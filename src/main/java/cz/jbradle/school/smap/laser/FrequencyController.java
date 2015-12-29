@@ -20,7 +20,6 @@ package cz.jbradle.school.smap.laser;
 
 import org.zu.ardulink.Link;
 import org.zu.ardulink.gui.Linkable;
-import org.zu.ardulink.gui.facility.IntMinMaxModel;
 import org.zu.ardulink.protocol.ReplyMessageCallback;
 
 import javax.swing.*;

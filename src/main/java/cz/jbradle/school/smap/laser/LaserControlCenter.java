@@ -10,7 +10,6 @@ import org.zu.ardulink.event.DisconnectionEvent;
 import org.zu.ardulink.gui.ConnectionStatus;
 import org.zu.ardulink.gui.Linkable;
 import org.zu.ardulink.gui.SerialConnectionPanel;
-import org.zu.ardulink.gui.ToneController;
 import org.zu.ardulink.protocol.ReplyMessageCallback;
 
 import javax.swing.*;
