@@ -1,19 +1,16 @@
 package cz.jbradle.school.smap.laser;
 
-import cz.jbradle.school.smap.laser.ui.configuration.LaserDiodeConfigurationPanel;
-import cz.jbradle.school.smap.laser.ui.configuration.LaserDiodeSensorConfigurationPanel;
-import cz.jbradle.school.smap.laser.ui.configuration.PhotoDiodeConfigurationPanel;
-import cz.jbradle.school.smap.laser.ui.controls.LaserPinStatus;
-import cz.jbradle.school.smap.laser.ui.controls.LaserSwitchController;
+import cz.jbradle.school.smap.laser.configuration.Configuration;
+import cz.jbradle.school.smap.laser.configuration.LaserDiodeConfigurationPanel;
 import org.apache.log4j.Logger;
 import org.zu.ardulink.Link;
 import org.zu.ardulink.event.ConnectionEvent;
 import org.zu.ardulink.event.ConnectionListener;
 import org.zu.ardulink.event.DisconnectionEvent;
 import org.zu.ardulink.gui.ConnectionStatus;
-import org.zu.ardulink.gui.DigitalPinStatus;
 import org.zu.ardulink.gui.Linkable;
 import org.zu.ardulink.gui.SerialConnectionPanel;
+import org.zu.ardulink.gui.ToneController;
 import org.zu.ardulink.protocol.ReplyMessageCallback;
 
 import javax.swing.*;
@@ -37,7 +34,7 @@ public class LaserControlCenter extends JFrame implements ConnectionListener, Li
 
     private Link link;
 
-    private final List<Linkable> linkables = new LinkedList<Linkable>();
+    private final List<Linkable> linkables = new LinkedList<>();
 
 
     private static final Logger logger = Logger.getLogger(LaserControlCenter.class);
@@ -69,7 +66,7 @@ public class LaserControlCenter extends JFrame implements ConnectionListener, Li
                 LaserControlCenter.class.getResource("laser_icon.png")));
         setTitle("Laser Control Center");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setBounds(100, 100, 730, 620);
+        setBounds(100, 100, 600, 500);
         JPanel contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
@@ -169,24 +166,40 @@ public class LaserControlCenter extends JFrame implements ConnectionListener, Li
 
         JPanel configurationPanel = new JPanel();
         tabbedPane.addTab("Configuration", null, configurationPanel, null);
-        configurationPanel.setLayout(new GridLayout(10, 1, 0, 0));
+        configurationPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        configurationPanel.add(new LaserDiodeConfigurationPanel());
-        configurationPanel.add(new PhotoDiodeConfigurationPanel());
-        configurationPanel.add(new LaserDiodeSensorConfigurationPanel());
+        LaserDiodeConfigurationPanel laserDiodeConfigurationPanel = new LaserDiodeConfigurationPanel();
+        configurationPanel.add(laserDiodeConfigurationPanel);
 
-        JPanel communicationPanel = new JPanel();
-        tabbedPane.addTab("Communication", null, communicationPanel, null);
-        communicationPanel.setLayout(new BorderLayout(5, 5));
+        JPanel switchPanel = new JPanel();
+        tabbedPane.addTab("Switch Panel", null, switchPanel, null);
+        switchPanel.setLayout(new GridLayout(1, 3, 0, 0));
 
-        JPanel westOfCommunicationPanel = new JPanel();
-        westOfCommunicationPanel.setLayout(new GridLayout(5, 1));
+        for (int i = 0; i < Configuration.getInstance().getLaserDiodeCount(); i++) {
+            LaserSwitchController switchController = switchController(i);
+            laserDiodeConfigurationPanel.addConfigurable(switchController);
+            switchPanel.add(switchController);
+        }
 
-        westOfCommunicationPanel.add(BorderLayout.WEST, new LaserSwitchController());
-        westOfCommunicationPanel.add(BorderLayout.WEST,new LaserPinStatus());
+        JPanel pwmPanel = new JPanel();
+        tabbedPane.addTab("PWM Panel", null, pwmPanel, null);
+        pwmPanel.setLayout(new GridLayout(1, 3, 0, 0));
 
-        communicationPanel.add(BorderLayout.WEST, westOfCommunicationPanel);
+        for (int i = 0; i < Configuration.getInstance().getLaserDiodeCount(); i++) {
+            LaserPWMController laserPWMController = pwmController(i);
+            laserDiodeConfigurationPanel.addConfigurable(laserPWMController);
+            pwmPanel.add(laserPWMController);
+        }
 
+        JPanel frequencyPanel = new JPanel();
+        tabbedPane.addTab("Frequency Panel", null, frequencyPanel, null);
+
+        for (int i = 0; i < Configuration.getInstance().getLaserDiodeCount(); i++) {
+            FrequencyController frequencyController = new FrequencyController(
+                    Configuration.getInstance().getLaserDiodePin(i));
+            frequencyPanel.add(frequencyController);
+            linkables.add(frequencyController);
+        }
 
         tabbedPane.setEnabled(false);
     }
@@ -230,4 +243,19 @@ public class LaserControlCenter extends JFrame implements ConnectionListener, Li
         logger.info("Connection status: " + connected);
     }
 
+    private LaserSwitchController switchController(int laserDiodeIndex) {
+        LaserSwitchController switchController = new LaserSwitchController();
+        switchController.setLaserDiodeIndex(laserDiodeIndex);
+        switchController.reloadWithConfiguration();
+        linkables.add(switchController);
+        return switchController;
+    }
+
+    private LaserPWMController pwmController(int laserDiodeIndex) {
+        LaserPWMController pwmController = new LaserPWMController();
+        pwmController.setLaserDiodeIndex(laserDiodeIndex);
+        pwmController.reloadWithConfiguration();
+        linkables.add(pwmController);
+        return pwmController;
+    }
 }
